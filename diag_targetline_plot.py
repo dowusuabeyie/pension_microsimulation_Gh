@@ -108,8 +108,8 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
             )
 
     # Title
-    ax.set_title(f"{ylabel} vs {xlabel}", fontsize=11, weight='bold')
-    plt.tight_layout()
+    # ax.set_title(f"{ylabel} vs {xlabel}", fontsize=11, weight='bold')
+    # plt.tight_layout()
 
     # Save high-quality PDF
     fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
@@ -119,19 +119,19 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
 # Generate & save four plots
 # ==============================
 plot_scatter(xs_contrib, ys_contrib,
-             "Macro contributors", "Micro contributors", "tab:blue",
+             "No. of contributors (macrodata)", "No. of contributors (microdata)", "tab:blue",
              "targetline-contr")
 
 plot_scatter(xs_ret, ys_ret,
-             "Macro retirees", "Micro retirees", "tab:orange",
+             "No. of retirees (macrodata)", "No. of retirees (microdata)", "tab:orange",
              "targetline-retir")
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Macro contributions (bn GHS)", "Micro contributions (bn GHS)", "tab:green",
+             "Contributions (bn GHS, macrodata)", "Contributions (bn GHS, microdata)", "tab:green",
              "targetline-contr-amt")
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Macro benefits (bn GHS)", "Micro benefits (bn GHS)", "tab:red",
+             "Benefits (bn GHS, macrodata)", "Benefits (bn GHS, microdata)", "tab:red",
              "targetline-ben-amt")
 
 print("All SciencePlots saved to ./figures as PDF.")
