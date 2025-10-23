@@ -1,7 +1,6 @@
 # append_micro.py
 # Append per-year micro files into a single panel CSV.
 # Default kind = "micro" (finals from run_panel.py).
-# You can also run with --kind micro_transitions or micro_fin if you ever need.
 
 from __future__ import annotations
 from pathlib import Path
