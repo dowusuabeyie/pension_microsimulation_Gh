@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from utils import load_config, resolve_path, load_macro
+import scienceplots
+plt.style.use(['science']) #science or ieee
 
 # Load configuration and data paths
 cfg = load_config("config.yaml")
@@ -67,20 +69,19 @@ def plot_bland_altman(ax, means, diffs, xlabel, ylabel, color):
     upper = md + 2.58 * sd
     lower = md - 2.58 * sd
 
-    ax.scatter(means, diffs, color=color, alpha=0.8)
-    ax.axhline(md, color='red', linestyle='-', label=f"Mean bias = {md:.2f}")
-    ax.axhline(upper, color='grey', linestyle='--', label='±1.96 SD limits')
+    ax.scatter(means, diffs, color=color, alpha=0.6)
+    ax.axhline(upper, color='grey', linestyle='--')
     ax.axhline(lower, color='grey', linestyle='--')
     ax.axhline(0, color='black', linestyle=':', alpha=0.5)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.grid(True, linestyle=':', linewidth=0.7)
 
-    ax.text(0.05, 0.93,
-            f"Bias={md:.2f}\n±1.96SD=({lower:.2f}, {upper:.2f})",
-            transform=ax.transAxes, fontsize=9,
-            bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"))
-    ax.legend(loc="lower right", fontsize=8)
+    #ax.text(0.05, 0.93,
+    #        f"Bias={md:.2f}\n±2.58SD=({lower:.2f}, {upper:.2f})",
+    #        transform=ax.transAxes, fontsize=9,
+    #        bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"))
+    #ax.legend(loc="lower right", fontsize=8)
 
 # ---- Draw 2×2 panel ----
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))

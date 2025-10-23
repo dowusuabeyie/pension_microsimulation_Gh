@@ -1,10 +1,25 @@
+# === micro_vs_macro_science_split.py ===
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from utils import load_config, resolve_path, load_macro
+import scienceplots
 
-# Load configuration and data paths
+# Apply SciencePlots style
+plt.style.use(['science', 'scatter'])
+
+# ==============================
+# Directory setup
+# ==============================
+# Create 'figures' folder if it does not exist
+if not os.path.exists("./figures"):
+    os.makedirs("figures")
+
+# ==============================
+# Load configuration and data
+# ==============================
 cfg = load_config("config.yaml")
 root = cfg["project"]["root_dir"]
 out_dir = resolve_path(root, cfg["project"]["output_dir"])
@@ -21,6 +36,9 @@ xs_ret, ys_ret = [], []           # retirees
 xs_contr_amt, ys_contr_amt = [], []  # contributions
 xs_ben_amt, ys_ben_amt = [], []      # benefits
 
+# ==============================
+# Load each year's microdata
+# ==============================
 for y in years:
     fp = out_dir / f"micro_{y}.csv"
     if not fp.exists():
@@ -53,39 +71,67 @@ for y in years:
     xs_ben_amt.append(macro_ben_amt / 1e9)
     ys_ben_amt.append(micro_ben_amt / 1e9)
 
-# ---- Plot all four comparisons ----
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+# ==============================
+# Define plotting helper
+# ==============================
+def plot_scatter(x, y, xlabel, ylabel, color, fname):
+    """Draws and saves a SciencePlots-styled scatter plot."""
+    fig, ax = plt.subplots(figsize=(5, 5))
 
-def plot_scatter(ax, x, y, xlabel, ylabel, color):
     if len(x) == 0 or len(y) == 0:
         ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=10)
-        return
-    ax.scatter(x, y, color=color, alpha=0.8)
-    mn, mx = min(min(x), min(y)), max(max(x), max(y))
-    ax.plot([mn, mx], [mn, mx], linestyle='--', color='grey', alpha=0.7)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.grid(True, linestyle=':', linewidth=0.7)
-    
-    # Add R² annotation
-    r2 = np.corrcoef(x, y)[0, 1] ** 2 if len(x) > 1 else np.nan
-    ax.text(0.05, 0.92, f"$R^2$ = {r2:.3f}", transform=ax.transAxes,
-            fontsize=10, color="black", bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"))
+    else:
+        ax.scatter(x, y, color=color, s=35, alpha=0.9, edgecolor='none')
+        mn, mx = min(min(x), min(y)), max(max(x), max(y))
+        ax.plot([mn, mx], [mn, mx], linestyle='--', color='grey', alpha=0.7)
 
-# Top row
-plot_scatter(axes[0, 0], xs_contrib, ys_contrib,
-             "Macro contributors", "Micro contributors", "tab:blue")
+        # Axis labels
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
-plot_scatter(axes[0, 1], xs_ret, ys_ret,
-             "Macro retirees", "Micro retirees", "tab:orange")
+        # Inward ticks on all sides
+        ax.tick_params(direction='in', length=4, width=0.8, top=True, right=True)
+        ax.set_box_aspect(1)
 
-# Bottom row
-plot_scatter(axes[1, 0], xs_contr_amt, ys_contr_amt,
-             "Macro contributions (bn GHS)", "Micro contributions (bn GHS)", "tab:green")
+        # Light grid
+        ax.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
 
-plot_scatter(axes[1, 1], xs_ben_amt, ys_ben_amt,
-             "Macro benefits (bn GHS)", "Micro benefits (bn GHS)", "tab:red")
+        # Add R² annotation
+        if len(x) > 1:
+            r2 = np.corrcoef(x, y)[0, 1] ** 2
+            ax.text(
+                0.05, 0.92, f"$R^2$ = {r2:.3f}",
+                transform=ax.transAxes,
+                fontsize=9,
+                color="black",
+                bbox=dict(facecolor="white", alpha=0.65, edgecolor="none")
+            )
 
-plt.suptitle("Micro vs Macro — Contributors, Retirees, Contributions, and Benefits", fontsize=14)
-plt.tight_layout(rect=[0, 0, 1, 0.97])
-plt.show()
+    # Title
+    ax.set_title(f"{ylabel} vs {xlabel}", fontsize=11, weight='bold')
+    plt.tight_layout()
+
+    # Save high-quality PDF
+    fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+# ==============================
+# Generate & save four plots
+# ==============================
+plot_scatter(xs_contrib, ys_contrib,
+             "Macro contributors", "Micro contributors", "tab:blue",
+             "targetline-contr")
+
+plot_scatter(xs_ret, ys_ret,
+             "Macro retirees", "Micro retirees", "tab:orange",
+             "targetline-retir")
+
+plot_scatter(xs_contr_amt, ys_contr_amt,
+             "Macro contributions (bn GHS)", "Micro contributions (bn GHS)", "tab:green",
+             "targetline-contr-amt")
+
+plot_scatter(xs_ben_amt, ys_ben_amt,
+             "Macro benefits (bn GHS)", "Micro benefits (bn GHS)", "tab:red",
+             "targetline-ben-amt")
+
+print("All SciencePlots saved to ./figures as PDF.")
