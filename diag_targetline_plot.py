@@ -94,7 +94,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
         ax.set_box_aspect(1)
 
         # Light grid
-        ax.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
+        #ax.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
 
         # Add R² annotation
         if len(x) > 1:
