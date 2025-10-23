@@ -28,8 +28,10 @@ def parse_age_bounds(lbl: str) -> tuple[int, int]:
         lo, hi = int(nums[0]), int(nums[1])
         return lo, hi
     if len(nums) == 1:
-        x = int(nums[0]);  return x, x
+        x = int(nums[0])
+        return x, x
     return -1, -1
+
 
 def rescale_domain_totals(sample: pd.DataFrame, grp_col: str, N_col: str, sch: str, target: float):
     """If sum N for sch != target, scale N proportionally within sch."""
@@ -43,29 +45,44 @@ def rescale_domain_totals(sample: pd.DataFrame, grp_col: str, N_col: str, sch: s
         return sample, sf
     return sample, np.nan
 
+
 def expand_strata_to_micro(strata: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """
+    Expand strata-level data into microdata with string-formatted IDs.
+    ID format: '0000115' → 00001 = count, 15 = year (last two digits)
+    """
     cS, cD = cfg["columns"]["sample"], cfg["columns"]["demog"]
-    rows, uid = [], 1
-    for _, r in strata.iterrows():
-        n = int(r[cS["group_sample"]]) if pd.notna(r[cS["group_sample"]]) else 0
-        if n <= 0:
-            continue
-        N = float(r[cS["group_total"]]) if pd.notna(r[cS["group_total"]]) else None
-        w = (N / n) if (N is not None and n > 0) else None
-        age_min, age_max = parse_age_bounds(str(r[cD["age_group"]]))
-        for _ in range(n):
-            rows.append({
-                "id_synt": uid,
-                "cal_yr": r[cD["year"]],
-                "age_min": age_min,
-                "age_max": age_max,
-                "age_grp": r[cD["age_group"]],
-                "sex": r[cD["sex"]],
-                "sch_grp": r[cS["scheme_group"]],
-                "weight": w
-            })
-            uid += 1
+    rows = []
+
+    # Group by year so id_synt resets for each year
+    for year, grp in strata.groupby(cD["year"]):
+        uid = 1  # reset counter for each year
+        yr_suffix = str(year)[-2:]  # last two digits of the year
+
+        for _, r in grp.iterrows():
+            n = int(r[cS["group_sample"]]) if pd.notna(r[cS["group_sample"]]) else 0
+            if n <= 0:
+                continue
+            N = float(r[cS["group_total"]]) if pd.notna(r[cS["group_total"]]) else None
+            w = (N / n) if (N is not None and n > 0) else None
+            age_min, age_max = parse_age_bounds(str(r[cD["age_group"]]))
+
+            for _ in range(n):
+                id_formatted = f"{uid:05d}{yr_suffix}"  # e.g., 0000115, 0101016
+                rows.append({
+                    "id_synt": id_formatted,
+                    "cal_yr": year,
+                    "age_min": age_min,
+                    "age_max": age_max,
+                    "age_grp": r[cD["age_group"]],
+                    "sex": r[cD["sex"]],
+                    "sch_grp": r[cS["scheme_group"]],
+                    "weight": w
+                })
+                uid += 1
+
     return pd.DataFrame(rows)
+
 
 def bernoulli_with_target(weights: np.ndarray, base_probs: np.ndarray, target: float, rng: np.random.Generator) -> np.ndarray:
     w = np.asarray(weights, float)
@@ -77,6 +94,7 @@ def bernoulli_with_target(weights: np.ndarray, base_probs: np.ndarray, target: f
     p_scaled = np.minimum(1.0, p * s)
     return rng.random(len(p_scaled)) < p_scaled
 
+
 def proportional_pool(mask: np.ndarray, weights: np.ndarray, target: float, rng: np.random.Generator) -> np.ndarray:
     m = np.asarray(mask, bool)
     w_pool = np.asarray(weights, float)[m]
@@ -85,14 +103,16 @@ def proportional_pool(mask: np.ndarray, weights: np.ndarray, target: float, rng:
     if tot <= 0 or target <= 0:
         return out
     p = min(1.0, target / tot)
-    probs = np.zeros_like(weights, dtype=float); probs[m] = p
+    probs = np.zeros_like(weights, dtype=float)
+    probs[m] = p
     return bernoulli_with_target(weights, probs, target, rng)
+
 
 # ---------- main pipeline ----------
 def main():
     cfg = load_config("config.yaml")
     mode = cfg["years"]["mode"]
-    years = list(range(int(cfg["years"]["start"]), int(cfg["years"]["end"])+1)) if mode=="range" else list(cfg["years"]["list"])
+    years = list(range(int(cfg["years"]["start"]), int(cfg["years"]["end"]) + 1)) if mode == "range" else list(cfg["years"]["list"])
     if not years:
         raise ValueError("No years specified in config.yaml")
 
@@ -116,7 +136,7 @@ def main():
         ystage.mkdir(parents=True, exist_ok=True)
 
         # ---- load data
-        demog  = load_demog_for_year(cfg, year)
+        demog = load_demog_for_year(cfg, year)
         sample = load_sample_for_year(cfg, year)
         mrow = macro.loc[macro[cM["year"]] == year]
         if mrow.empty:
@@ -127,7 +147,7 @@ def main():
         contr_amt = macro_targets["contributions_total"]
         benef_amt = macro_targets["benefits_total"]
         ie_avg = float(mrow.iloc[0][cM["insurable_earnings_avg"]])
-        p_avg  = float(mrow.iloc[0][cM["pension_avg"]])
+        p_avg = float(mrow.iloc[0][cM["pension_avg"]])
 
         # ---- rescale C/R N_g_h to match macro stocks
         sample, sf_C = rescale_domain_totals(sample, cS["scheme_group"], cS["group_total"], "C", contr_cnt)
@@ -149,7 +169,8 @@ def main():
         Rmask = (micro["sch_grp"] == "R")
 
         # lognormal factors with mean 1
-        muC = -0.5 * (sigma_C**2); muR = -0.5 * (sigma_R**2)
+        muC = -0.5 * (sigma_C ** 2)
+        muR = -0.5 * (sigma_R ** 2)
 
         # IE for contributors; 0 otherwise
         ie = np.zeros(len(micro), float)
@@ -161,7 +182,7 @@ def main():
         pens = np.zeros(len(micro), float)
         pens[Rmask.values] = p_avg * np.exp(muR + sigma_R * rng.standard_normal(Rmask.sum()))
 
-        # ---- scale to macro totals (weighted) — CORRECTED
+        # ---- scale to macro totals (weighted)
         w = micro["weight"].fillna(0.0).to_numpy()
         cur_contr = float(np.dot(contrib, w))
         cur_benef = float(np.dot(pens, w))
@@ -169,37 +190,33 @@ def main():
         sf_money_C = (contr_amt / cur_contr) if cur_contr > 0 else 1.0
         sf_money_R = (benef_amt / cur_benef) if cur_benef > 0 else 1.0
 
-        # Scale BOTH ie and contribution by the SAME factor so contribution == kappa * ie holds
-        ie      *= sf_money_C
+        # Scale BOTH ie and contribution by SAME factor
+        ie *= sf_money_C
         contrib *= sf_money_C
+        pens *= sf_money_R
 
-        # Scale pensions to macro
-        pens    *= sf_money_R
-  
-        # ---- transitions (regr_0, retir_0, deaths)
-        regr0_target  = float(mrow.iloc[0][cM["new_registrants"]])
+        # ---- transitions
+        regr0_target = float(mrow.iloc[0][cM["new_registrants"]])
         retir0_target = float(mrow.iloc[0][cM["new_retirees"]])
 
-        # q_as from strata (age_grp, sex)
         qx_map = (
             strata[[cD["age_group"], cD["sex"], cD["mortality_rate"]]]
             .drop_duplicates(subset=[cD["age_group"], cD["sex"]])
-            .rename(columns={cD["age_group"]:"age_grp", cD["sex"]:"sex", cD["mortality_rate"]:"q_as"})
+            .rename(columns={cD["age_group"]: "age_grp", cD["sex"]: "sex", cD["mortality_rate"]: "q_as"})
         )
-        micro = micro.merge(qx_map, on=["age_grp","sex"], how="left")
+        micro = micro.merge(qx_map, on=["age_grp", "sex"], how="left")
         micro["q_as"] = micro["q_as"].fillna(0.0)
         micro["p_as"] = 1.0 - micro["q_as"]
 
-        under60   = (micro["age_min"] < 60)
+        under60 = (micro["age_min"] < 60)
         band55_59 = (micro["age_min"] >= 55) & (micro["age_min"] < 60)
         band60_64 = (micro["age_min"] >= 60) & (micro["age_min"] < 65)
 
-        pool_regr = (micro["sch_grp"]=="N") & under60
-        pool_ret1 = (micro["sch_grp"]=="C") & band55_59
-        pool_ret2 = (micro["sch_grp"]=="C") & band60_64
+        pool_regr = (micro["sch_grp"] == "N") & under60
+        pool_ret1 = (micro["sch_grp"] == "C") & band55_59
+        pool_ret2 = (micro["sch_grp"] == "C") & band60_64
 
         regr_0_ind = proportional_pool(pool_regr.to_numpy(), w, regr0_target, rng)
-        # retirees: primary then top-up
         retir_0_ind = np.zeros(len(micro), dtype=bool)
         draw1 = proportional_pool(pool_ret1.to_numpy(), w, retir0_target, rng)
         retir_0_ind |= draw1
@@ -210,23 +227,22 @@ def main():
             draw2 = proportional_pool(pool2_eff.to_numpy(), w, need, rng)
             retir_0_ind |= draw2
 
-        # deaths via q_as
         death_ind = bernoulli_with_target(w, micro["q_as"].to_numpy(), float(np.dot(micro["q_as"].to_numpy(), w)), rng)
 
         # ---- finalize variables
         micro["ie"] = ie
         micro["contribution"] = contrib
         micro["pension"] = pens
-        micro["regr_0_ind"]  = regr_0_ind.astype(int)
+        micro["regr_0_ind"] = regr_0_ind.astype(int)
         micro["retir_0_ind"] = retir_0_ind.astype(int)
-        micro["death_ind"]   = death_ind.astype(int)
-        micro["sch_status"]  = micro["sch_grp"]  # snapshot status (panel update will evolve it)
+        micro["death_ind"] = death_ind.astype(int)
+        micro["sch_status"] = micro["sch_grp"]
 
         # reorder & write final
         final_cols = [
-            "id_synt","cal_yr","age_min","age_max","age_grp","sex","sch_grp","weight",
-            "ie","sch_status","contribution","pension","q_as","p_as",
-            "regr_0_ind","retir_0_ind","death_ind"
+            "id_synt", "cal_yr", "age_min", "age_max", "age_grp", "sex", "sch_grp", "weight",
+            "ie", "sch_status", "contribution", "pension", "q_as", "p_as",
+            "regr_0_ind", "retir_0_ind", "death_ind"
         ]
         micro_final = micro[final_cols].copy()
 
@@ -234,7 +250,7 @@ def main():
         final_path = out_dir / f"micro_{year}.csv"
         micro_final.to_csv(final_path, index=False, encoding="utf-8-sig")
 
-        # write year diagnostics (final)
+        # write diagnostics
         diag_basic = quick_totals(cfg, demog, sample)
         diag_basic["contributors_total"] = contr_cnt
         diag_basic["retirees_total"] = retir_cnt
@@ -246,23 +262,24 @@ def main():
         diag_basic["money_scale_R"] = sf_money_R
         diag_basic["regr_0_target"] = regr0_target
         diag_basic["retir_0_target"] = retir0_target
-        diag_basic["regr_0_weighted"]  = float(np.dot(micro["regr_0_ind"].to_numpy(), w))
+        diag_basic["regr_0_weighted"] = float(np.dot(micro["regr_0_ind"].to_numpy(), w))
         diag_basic["retir_0_weighted"] = float(np.dot(micro["retir_0_ind"].to_numpy(), w))
         diag_basic["deaths_expected_w"] = float(np.dot(micro["q_as"].to_numpy(), w))
         diag_basic["deaths_achieved_w"] = float(np.dot(micro["death_ind"].to_numpy(), w))
         (out_dir / f"diagnostics_{year}.csv").write_text(diag_basic.to_csv(index=False), encoding="utf-8-sig")
 
-        # write intermediates in staging
+        # write intermediates
         (ystage / "micro_fin.csv").write_text(
-            pd.DataFrame({"ie":ie, "contribution":contrib, "pension":pens}).to_csv(index=False),
+            pd.DataFrame({"ie": ie, "contribution": contrib, "pension": pens}).to_csv(index=False),
             encoding="utf-8-sig"
         )
-        micro.assign(q_as=micro["q_as"], p_as=micro["p_as"],
-                     regr_0_ind=micro["regr_0_ind"], retir_0_ind=micro["retir_0_ind"], death_ind=micro["death_ind"])\
-             .to_csv(ystage / "micro_transitions.csv", index=False, encoding="utf-8-sig")
+        micro.assign(
+            q_as=micro["q_as"], p_as=micro["p_as"],
+            regr_0_ind=micro["regr_0_ind"], retir_0_ind=micro["retir_0_ind"], death_ind=micro["death_ind"]
+        ).to_csv(ystage / "micro_transitions.csv", index=False, encoding="utf-8-sig")
 
         print(f"[{year}] final micro & diagnostics written. Intermediates → {ystage}")
 
-       
+
 if __name__ == "__main__":
     main()

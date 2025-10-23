@@ -6,14 +6,14 @@ project:
 
 years:
   mode: "range"        # "range" or "list"
-  start: 2020
-  end: 2021
+  start: 2015
+  end: 2024
   list: []             # e.g., [2015,2016,2021] if you switch to "list"
 
 files:
   macro: "input/macro.csv"
-  demog_all: "input/demog_2020_2021.csv"
-  sample_all: "input/sample_2020_2021.csv"
+  demog_all: "input/demog_2015_2024.csv"
+  sample_all: "input/sample_2015_2024.csv"
 
 
 columns:
