@@ -130,15 +130,15 @@ plot_scatter(xs_ret, ys_ret,
              "Number of retirees (macrodata)", "Number of retirees (microdata)",
              "tab:orange", "targetline-retir",
              scientific=True,
-             xlim=(150000, 260000), ylim=(150000, 260000))
+             xlim=(140000, 260000), ylim=(140000, 260000))
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Contributions (bn GHS, macrodata)", "Contributions (bn GHS, microdata)",
+             "Contributions (bil. GHS, macrodata)", "Contributions (bn GHS, microdata)",
              "tab:green", "targetline-contr-amt",
              xlim=(1, 9), ylim=(1, 9))
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Benefits (bn GHS, macrodata)", "Benefits (bn GHS, microdata)",
+             "Benefits (bn GHS, macrodata)", "Benefits (bil. GHS, microdata)",
              "tab:red", "targetline-ben-amt",
              xlim=(1, 7), ylim=(1, 7))
 
