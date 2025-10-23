@@ -74,7 +74,7 @@ for y in years:
 # ==============================
 # Define plotting helper
 # ==============================
-def plot_scatter(x, y, xlabel, ylabel, color, fname):
+def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None, ylim=None):
     """Draws and saves a SciencePlots-styled scatter plot."""
     fig, ax = plt.subplots(figsize=(5, 5))
 
@@ -89,12 +89,19 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-        # Inward ticks on all sides
-        ax.tick_params(direction='in', length=4, width=0.8, top=True, right=True)
-        ax.set_box_aspect(1)
+        # Custom limits if provided
+        if xlim is not None:
+            ax.set_xlim(xlim)
+        if ylim is not None:
+            ax.set_ylim(ylim)
 
-        # Light grid
-        #ax.grid(True, linestyle=":", linewidth=0.6, alpha=0.6)
+        # Scientific notation option (for retirees)
+        if scientific:
+            ax.ticklabel_format(style='sci', axis='both', scilimits=(5, 5))
+
+        # Inward ticks on all sides
+        ax.tick_params(direction='in', length=5, width=0.8, top=True, right=True)
+        ax.set_box_aspect(1)
 
         # Add R² annotation
         if len(x) > 1:
@@ -107,10 +114,6 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
                 bbox=dict(facecolor="white", alpha=0.65, edgecolor="none")
             )
 
-    # Title
-    # ax.set_title(f"{ylabel} vs {xlabel}", fontsize=11, weight='bold')
-    # plt.tight_layout()
-
     # Save high-quality PDF
     fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -119,19 +122,24 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname):
 # Generate & save four plots
 # ==============================
 plot_scatter(xs_contrib, ys_contrib,
-             "No. of contributors (macrodata)", "No. of contributors (microdata)", "tab:blue",
-             "targetline-contr")
+             "Number of contributors (macrodata)", "Number of contributors (microdata)",
+             "tab:blue", "targetline-contr",
+             xlim=(1200000, 2100000), ylim=(1200000, 2100000))
 
 plot_scatter(xs_ret, ys_ret,
-             "No. of retirees (macrodata)", "No. of retirees (microdata)", "tab:orange",
-             "targetline-retir")
+             "Number of retirees (macrodata)", "Number of retirees (microdata)",
+             "tab:orange", "targetline-retir",
+             scientific=True,
+             xlim=(150000, 260000), ylim=(150000, 260000))
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Contributions (bn GHS, macrodata)", "Contributions (bn GHS, microdata)", "tab:green",
-             "targetline-contr-amt")
+             "Contributions (bn GHS, macrodata)", "Contributions (bn GHS, microdata)",
+             "tab:green", "targetline-contr-amt",
+             xlim=(1, 9), ylim=(1, 9))
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Benefits (bn GHS, macrodata)", "Benefits (bn GHS, microdata)", "tab:red",
-             "targetline-ben-amt")
+             "Benefits (bn GHS, macrodata)", "Benefits (bn GHS, microdata)",
+             "tab:red", "targetline-ben-amt",
+             xlim=(1, 7), ylim=(1, 7))
 
 print("All SciencePlots saved to ./figures as PDF.")
