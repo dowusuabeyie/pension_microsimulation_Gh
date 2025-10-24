@@ -152,12 +152,12 @@ plot_scatter(xs_ret, ys_ret,
              xlim=(150000, 260000), ylim=(150000, 260000))
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Contribution (macrodata, GHS)", "Contribution (microdata, GHS)",
+             "Contribution (macrodata)", "Contribution (microdata)",
              "tab:green", "targetline-contr-amt",
              xlim=(1000000000, 9000000000), ylim=(1000000000, 9000000000))
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Benefit (macrodata, GHS)", "Benefit (microdata, GHS)",
+             "Benefit (macrodata)", "Benefit (microdata)",
              "tab:red", "targetline-ben-amt",
              xlim=(1000000000, 7000000000), ylim=(1000000000, 7000000000))
 
