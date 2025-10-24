@@ -64,17 +64,17 @@ for y in years:
     ys_contrib.append(micro_contributors)
     xs_ret.append(macro_retirees)
     ys_ret.append(micro_retirees)
-    xs_contr_amt.append(macro_contr_amt / 1e9)
-    ys_contr_amt.append(micro_contr_amt / 1e9)
-    xs_ben_amt.append(macro_ben_amt / 1e9)
-    ys_ben_amt.append(micro_ben_amt / 1e9)
+    xs_contr_amt.append(macro_contr_amt)
+    ys_contr_amt.append(micro_contr_amt)
+    xs_ben_amt.append(macro_ben_amt)
+    ys_ben_amt.append(micro_ben_amt)
 
 # ==============================
 # Bland–Altman helper
 # ==============================
 def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
     """Draw Bland–Altman plot (mean vs. difference)."""
-    fig, ax = plt.subplots(figsize=(3, 9))
+    fig, ax = plt.subplots(figsize=(3, 3))
     if len(x) == 0 or len(y) == 0:
         ax.text(0.5, 0.5, "No data", ha="center", va="center")
     else:
