@@ -1,55 +1,133 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+# pyramid_batch.py
+import os
 from pathlib import Path
-from utils import load_config, resolve_path, load_demog_for_year
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from utils import load_config, resolve_path, load_sample_for_year, load_demog_for_year
+
+# optional: scienceplots if you want same style as targetline scripts
+try:
+    import scienceplots
+    plt.style.use(['science', 'scatter'])
+except Exception:
+    # fallback to default style if scienceplots not available
+    pass
+
+# output folder
+FIG_DIR = Path("./figures")
+FIG_DIR.mkdir(exist_ok=True)
 
 cfg = load_config("config.yaml")
-out_dir = resolve_path(cfg["project"]["root_dir"], cfg["project"]["output_dir"])
-year = int(cfg["years"]["start"])
-micro = pd.read_csv(out_dir / f"micro_{year}.csv")
-demog = load_demog_for_year(cfg, year)
+root = cfg["project"]["root_dir"]
+out_dir = resolve_path(root, cfg["project"]["output_dir"])
+
+years = list(range(int(cfg["years"]["start"]), int(cfg["years"]["end"]) + 1))
+
+# config column names
+cD = cfg["columns"]["demog"]
+cS = cfg["columns"]["sample"]
 
 age_order = cfg.get("age_groups", {}).get("order")
-cD = cfg["columns"]["demog"]
+sex_order = cfg.get("sex_values", ["M", "F"])
 
-# ensure age_order exists
-if age_order is None:
-    age_order = sorted(demog[cD["age_group"]].unique())
+def make_pyramid_for_year(year):
+    # load micro and sample for this year
+    micro_fp = out_dir / f"micro_{year}.csv"
+    if not micro_fp.exists():
+        print(f"[{year}] micro file not found, skipping.")
+        return
 
-micro["weight"] = pd.to_numeric(micro["weight"], errors="coerce").fillna(0)
+    micro = pd.read_csv(micro_fp)
+    sample = load_sample_for_year(cfg, year)
 
-micro_agg = (micro
-             .groupby([cD["age_group"], "sex"])["weight"]
-             .sum()
-             .unstack(fill_value=0)
-             .reindex(index=age_order))
+    # ensure numeric weights
+    micro["weight"] = pd.to_numeric(micro["weight"], errors="coerce").fillna(0)
 
-demog_agg = (demog
-             .groupby([cD["age_group"], cD["sex"]])[cD["population"]]
-             .sum()
-             .unstack(fill_value=0)
-             .reindex(index=age_order))
+    # Ensure categories / ordering
+    if age_order is None:
+        # fallback: derive age order from sample (or demog)
+        if cS["age_group"] in sample.columns:
+            age_order_local = sorted(sample[cS["age_group"]].astype(str).unique())
+        else:
+            demog = load_demog_for_year(cfg, year)
+            age_order_local = sorted(demog[cD["age_group"]].astype(str).unique())
+    else:
+        age_order_local = age_order
 
-micro_pct = micro_agg.div(micro_agg.sum().sum()) * 100
-demog_pct = demog_agg.div(demog_agg.sum().sum()) * 100
+    # Aggregate micro: weighted counts by age_grp × sex
+    micro_agg = (
+        micro
+        .groupby([cS["age_group"] if cS["age_group"] in micro.columns else cD["age_group"], "sex"], dropna=False)["weight"]
+        .sum()
+        .unstack(fill_value=0)
+        .reindex(index=age_order_local)
+    )
 
-y = np.arange(len(age_order))
-fig, axes = plt.subplots(1,2, figsize=(10,8), sharey=True)
+    # Aggregate macro (sample): use N_g_h as population totals
+    # sample uses columns cS["age_group"], cS["sex"], cS["group_total"]
+    sample_pop = (
+        sample
+        .groupby([cS["age_group"], cS["sex"]], dropna=False)[cS["group_total"]]
+        .sum()
+        .unstack(fill_value=0)
+        .reindex(index=age_order_local)
+    )
 
-axes[0].barh(y, -micro_pct.get("M", pd.Series(0, index=age_order)), align='center')
-axes[0].barh(y,  micro_pct.get("F", pd.Series(0, index=age_order)), align='center')
-axes[0].set_title("Micro % by age-sex")
+    # If some sex columns missing, ensure both M/F exist
+    for df in (micro_agg, sample_pop):
+        for s in sex_order:
+            if s not in df.columns:
+                df[s] = 0.0
+        # reorder columns
+        df = df[sex_order]
 
-axes[1].barh(y, -demog_pct.get("M", pd.Series(0, index=age_order)), align='center')
-axes[1].barh(y,  demog_pct.get("F", pd.Series(0, index=age_order)), align='center')
-axes[1].set_title("Demographic % by age-sex")
+    # convert to DataFrames with the right column order
+    micro_agg = micro_agg[sex_order].fillna(0)
+    sample_pop = sample_pop[sex_order].fillna(0)
 
-for ax in axes:
-    ax.set_yticks(y)
-    ax.set_yticklabels(age_order)
-    ax.invert_yaxis()
-    
-plt.suptitle(f"Population pyramid comparison — {year}")
-plt.tight_layout()
-plt.show()
+    # normalize to percentages (so pyramids compare shape not absolute size)
+    micro_pct = micro_agg.div(micro_agg.sum().sum()).fillna(0) * 100
+    sample_pct = sample_pop.div(sample_pop.sum().sum()).fillna(0) * 100
+
+    # y positions
+    y = np.arange(len(age_order_local))
+
+    # Plotting
+    fig, axes = plt.subplots(1, 2, figsize=(10, 8), sharey=True)
+
+    # left: micro
+    axes[0].barh(y, -micro_pct.get(sex_order[0], pd.Series(0, index=age_order_local)), align='center')
+    axes[0].barh(y,  micro_pct.get(sex_order[1], pd.Series(0, index=age_order_local)), align='center')
+    axes[0].set_title(f"Micro % by age-sex\n({year})", fontsize=11)
+
+    # right: sample (macro-pop from sample N_g_h)
+    axes[1].barh(y, -sample_pct.get(sex_order[0], pd.Series(0, index=age_order_local)), align='center')
+    axes[1].barh(y,  sample_pct.get(sex_order[1], pd.Series(0, index=age_order_local)), align='center')
+    axes[1].set_title(f"Sample/pop % by age-sex\n({year})", fontsize=11)
+
+    # y-ticks
+    for ax in axes:
+        ax.set_yticks(y)
+        ax.set_yticklabels(age_order_local)
+        ax.invert_yaxis()
+        ax.tick_params(direction='in', length=5, width=0.8, top=True, right=True)
+        ax.set_box_aspect(1)
+
+    # add a small shared x-labels
+    axes[0].set_xlabel(f"% population (Micro)")
+    axes[1].set_xlabel(f"% population (Sample N_g_h)")
+
+    plt.suptitle(f"Population pyramid comparison — {year}", fontsize=13)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+    outp = FIG_DIR / f"pyramid_{year}.pdf"
+    fig.savefig(outp, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"[{year}] saved → {outp}")
+
+# Run for all years
+for y in years:
+    make_pyramid_for_year(y)
+
+print("All pyramids saved to ./figures.")
