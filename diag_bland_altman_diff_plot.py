@@ -72,7 +72,7 @@ for y in years:
 # ==============================
 # Bland–Altman helper
 # ==============================
-def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
+def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None, scientific=False):
     """Draw Bland–Altman plot (mean vs. difference)."""
     fig, ax = plt.subplots(figsize=(3, 3))
     if len(x) == 0 or len(y) == 0:
@@ -83,19 +83,20 @@ def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
         md = np.mean(diff)
         sd = np.std(diff)
 
-        ax.scatter(mean, diff, color=color, s=35, alpha=0.9, edgecolor='none')
+        ax.scatter(mean, diff, color=color, s=35, alpha=0.9, edgecolor='none', marker='2')
         ax.axhline(md, color='grey', linestyle='--', lw=1)
-        ax.axhline(md + 1.96*sd, color='grey', linestyle=':', lw=1)
-        ax.axhline(md - 1.96*sd, color='grey', linestyle=':', lw=1)
+        ax.axhline(md + 2.58*sd, color='grey', linestyle=':', lw=1)
+        ax.axhline(md - 2.58*sd, color='grey', linestyle=':', lw=1)
 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
+
+        # === Scientific notation option (for retirees) ===
+        if scientific:
+            ax.ticklabel_format(style='sci', axis='x', scilimits=(5, 5))
+
         ax.tick_params(direction='in', top=True, right=True)
         ax.set_box_aspect(1)
-
-        # Label the mean and limits
-       # ax.text(0.02, 0.95, f"Mean diff = {md:.2f}", transform=ax.transAxes, fontsize=9)
-       # ax.text(0.02, 0.88, f"±2.58 SD = {2.58*sd:.2f}", transform=ax.transAxes, fontsize=9)
 
     fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -104,19 +105,19 @@ def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
 # Generate and save
 # ==============================
 bland_altman_plot(xs_contrib, ys_contrib,
-                  "Mean contributors (×2 sources)", "Difference (Micro − Macro)",
+                  "$(\\text{Contr}_{\\text{micro}}+\\text{Contr}_{\\text{macro}})/2$", "$\\text{d}=(\\text{Contr}_{\\text{micro}}−\\text{Contr}_{\\text{macro}})$",
                   "tab:blue", "bland-altman-contr")
 
 bland_altman_plot(xs_ret, ys_ret,
-                  "Mean retirees (×2 sources)", "Difference (Micro − Macro)",
-                  "tab:orange", "bland-altman-retir")
-
+                  "$(\\text{Retir}_{\\text{micro}}+\\text{Retir}_{\\text{macro}})/2$", "$\\text{d}=(\\text{Retir}_{\\text{micro}}−\\text{Retir}_{\\text{macro}})$",
+                  "tab:orange", "bland-altman-retir",
+                  scientific=True) 
 bland_altman_plot(xs_contr_amt, ys_contr_amt,
-                  "Mean contributions (bn GHS)", "Difference (Micro − Macro)",
+                  "$(\\text{CAmt}_{\\text{micro}}+\\text{CAmt}_{\\text{macro}})/2$", "$\\text{d}=(\\text{CAmt}_{\\text{micro}}−\\text{CAmt}_{\\text{macro}})$",
                   "tab:green", "bland-altman-contr-amt")
 
 bland_altman_plot(xs_ben_amt, ys_ben_amt,
-                  "Mean benefits (bn GHS)", "Difference (Micro − Macro)",
+                  "$(\\text{Ben}_{\\text{micro}}+\\text{Ben}_{\\text{macro}})/2$", "$\\text{d}=(\\text{Ben}_{\\text{micro}}−\\text{Ben}_{\\text{macro}})$",
                   "tab:red", "bland-altman-ben-amt")
 
 print("All Bland–Altman plots saved to ./figures as PDF.")
