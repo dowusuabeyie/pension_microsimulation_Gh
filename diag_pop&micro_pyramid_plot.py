@@ -1,4 +1,4 @@
-# pyramid_batch.py
+# diag_pop&micro_pyramid_plot.py
 import os
 from pathlib import Path
 import numpy as np
