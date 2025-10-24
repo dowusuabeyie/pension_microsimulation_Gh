@@ -74,7 +74,7 @@ for y in years:
 # ==============================
 def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
     """Draw Bland–Altman plot (mean vs. difference)."""
-    fig, ax = plt.subplots(figsize=(5, 9))
+    fig, ax = plt.subplots(figsize=(3, 9))
     if len(x) == 0 or len(y) == 0:
         ax.text(0.5, 0.5, "No data", ha="center", va="center")
     else:
