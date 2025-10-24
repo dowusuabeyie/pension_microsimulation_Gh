@@ -1,4 +1,4 @@
-# === descriptives_age_sex_wide_all_years.py ===
+# === descriptives_age_sex_wide_all_years_pooled.py ===
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -110,15 +110,54 @@ def reshape_for_display(df):
     return wide
 
 # ======================
-# Generate and export
+# Pooled 2015–2024 dataset
 # ======================
+print("Computing pooled 2015–2024 averages...")
+
+# Load and combine all microdata for pooled analysis
+micro_pooled = []
+for y in years:
+    fp = out_dir / f"micro_{y}.csv"
+    if fp.exists():
+        df = pd.read_csv(fp)
+        df["year"] = y
+        micro_pooled.append(df)
+micro_pooled = pd.concat(micro_pooled, ignore_index=True)
+
+df_pooled_stats = compute_stats(micro_pooled, year="2015–2024")
+
+# Create pooled wide table (no Year column in results)
+def reshape_pooled(df):
+    rows = []
+    for age in sorted(df["age_grp"].unique()):
+        sub = df[df["age_grp"] == age]
+        for label, suffix in [("P10", "_P10"), ("Mean", "_mean"), ("P90", "_P90")]:
+            row = {"Age Group": age, "Moment": label}
+            for sex in ["M", "F"]:
+                sdata = sub[sub["sex"] == sex]
+                row[f"{sex}_ie"] = sdata[f"ie{suffix}"].squeeze() if not sdata.empty else np.nan
+                row[f"{sex}_contr"] = sdata[f"contr{suffix}"].squeeze() if not sdata.empty else np.nan
+                row[f"{sex}_pens"] = sdata[f"pens{suffix}"].squeeze() if not sdata.empty else np.nan
+            rows.append(row)
+    wide = pd.DataFrame(rows)
+    wide = wide.rename(columns={
+        "M_ie": "ie (M)", "M_contr": "contribution (M)", "M_pens": "pension (M)",
+        "F_ie": "ie (F)", "F_contr": "contribution (F)", "F_pens": "pension (F)"
+    })
+    return wide
+
 df_wide_all = reshape_for_display(df_all)
 df_wide_2023 = reshape_for_display(df_all[df_all["year"] == 2023])
 df_wide_2024 = reshape_for_display(df_all[df_all["year"] == 2024])
+df_wide_pooled = reshape_pooled(df_pooled_stats)
 
+# ======================
+# Export all four files
+# ======================
 out_all = desc_dir / "micro_age_sex_table_2015_2024.xlsx"
 out_2023 = desc_dir / "micro_age_sex_table_2023.xlsx"
 out_2024 = desc_dir / "micro_age_sex_table_2024.xlsx"
+out_pooled = desc_dir / "micro_age_sex_table_pooled_2015_2024.xlsx"
 
 with pd.ExcelWriter(out_all, engine="openpyxl") as writer:
     df_wide_all.to_excel(writer, index=False, sheet_name="AllYears")
@@ -129,7 +168,11 @@ with pd.ExcelWriter(out_2023, engine="openpyxl") as writer:
 with pd.ExcelWriter(out_2024, engine="openpyxl") as writer:
     df_wide_2024.to_excel(writer, index=False, sheet_name="2024")
 
-print("\n All descriptive tables saved:")
+with pd.ExcelWriter(out_pooled, engine="openpyxl") as writer:
+    df_wide_pooled.to_excel(writer, index=False, sheet_name="Pooled_2015_2024")
+
+print("\n All descriptive tables saved successfully:")
 print(f" → {out_all}")
 print(f" → {out_2023}")
 print(f" → {out_2024}")
+print(f" → {out_pooled}")
