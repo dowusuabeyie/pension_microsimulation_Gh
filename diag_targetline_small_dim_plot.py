@@ -66,10 +66,10 @@ for y in years:
     ys_contrib.append(micro_contributors)
     xs_ret.append(macro_retirees)
     ys_ret.append(micro_retirees)
-    xs_contr_amt.append(macro_contr_amt / 1e9)
-    ys_contr_amt.append(micro_contr_amt / 1e9)
-    xs_ben_amt.append(macro_ben_amt / 1e9)
-    ys_ben_amt.append(micro_ben_amt / 1e9)
+    xs_contr_amt.append(macro_contr_amt)
+    ys_contr_amt.append(micro_contr_amt)
+    xs_ben_amt.append(macro_ben_amt)
+    ys_ben_amt.append(micro_ben_amt)
 
 # ==============================
 # Define plotting helper
@@ -124,7 +124,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             )
 
             ax.text(
-                0.05, 0.87,
+                0.05, 0.8,
                 text_eq,
                 transform=ax.transAxes,
                 fontsize=9,
@@ -141,25 +141,25 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
 # Generate & save four plots
 # ==============================
 plot_scatter(xs_contrib, ys_contrib,
-             "Number of contributors (macrodata)", "Number of contributors (microdata)",
+             "Contributors (macrodata)", "Contributors (microdata)",
              "tab:blue", "targetline-contr",
              xlim=(1200000, 2100000), ylim=(1200000, 2100000))
 
 plot_scatter(xs_ret, ys_ret,
-             "Number of retirees (macrodata)", "Number of retirees (microdata)",
+             "Retirees (macrodata)", "Retirees (microdata)",
              "tab:orange", "targetline-retir",
              scientific=True,
-             xlim=(140000, 260000), ylim=(140000, 260000))
+             xlim=(150000, 260000), ylim=(150000, 260000))
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Contribution (bil. GHS, macrodata)", "Contribution (bil. GHS, microdata)",
+             "Contribution (macrodata, GHS)", "Contribution (microdata, GHS)",
              "tab:green", "targetline-contr-amt",
-             xlim=(1, 9), ylim=(1, 9))
+             xlim=(1000000000, 9000000000), ylim=(1000000000, 9000000000))
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Benefit (bil. GHS, macrodata)", "Benefit (bil. GHS, microdata)",
+             "Benefit (macrodata, GHS)", "Benefit (microdata, GHS)",
              "tab:red", "targetline-ben-amt",
-             xlim=(1, 7), ylim=(1, 7))
+             xlim=(1000000000, 7000000000), ylim=(1000000000, 7000000000))
 
 print("All SciencePlots saved to ./figures as PDF.")
 
