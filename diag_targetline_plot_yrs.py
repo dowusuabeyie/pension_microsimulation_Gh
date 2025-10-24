@@ -81,7 +81,23 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
     if len(x) == 0 or len(y) == 0:
         ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=10)
     else:
+        # Scatter plot
         ax.scatter(x, y, color=color, s=35, alpha=0.9, edgecolor='none')
+
+        # === Add year labels rotated 45° ===
+        for i, year in enumerate(years):
+            if i < len(x) and i < len(y):
+                ax.text(
+                    x[i]-1, y[i]+ 1.05,
+                    str(year),
+                    fontsize=8,
+                    rotation=45,
+                    ha='left', va='bottom',
+                    color='black',
+                    alpha=0.75
+                )
+
+        # Add 45° target line
         mn, mx = min(min(x), min(y)), max(max(x), max(y))
         ax.plot([mn, mx], [mn, mx], linestyle='--', color='grey', alpha=0.7)
 
@@ -120,7 +136,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             text_eq = (
                 fr"$\mathrm{{RMSE}} = {sci_not(rmse)}$" "\n"
                 fr"$\mathrm{{MAPE}} = {sci_not(mape)}$" "\n"
-                fr"$R^2 = {r2:.2f}$" 
+                fr"$R^2 = {r2:.2f}$"
             )
 
             ax.text(
@@ -131,7 +147,6 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
                 color="black",
                 bbox=dict(facecolor="white", alpha=0.65, edgecolor="none")
             )
-
 
     # Save high-quality PDF
     fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")

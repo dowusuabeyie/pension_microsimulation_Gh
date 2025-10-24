@@ -1,12 +1,24 @@
+# === bland_altman_science_split.py ===
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from utils import load_config, resolve_path, load_macro
 import scienceplots
-plt.style.use(['science']) #science or ieee
 
-# Load configuration and data paths
+# Apply SciencePlots style
+plt.style.use(['science', 'scatter'])
+
+# ==============================
+# Directory setup
+# ==============================
+if not os.path.exists("./figures"):
+    os.makedirs("figures")
+
+# ==============================
+# Load configuration and data
+# ==============================
 cfg = load_config("config.yaml")
 root = cfg["project"]["root_dir"]
 out_dir = resolve_path(root, cfg["project"]["output_dir"])
@@ -17,13 +29,17 @@ macro = load_macro(cfg).set_index(cfg["columns"]["macro"]["year"])
 mult_contr = cfg.get("macro_units", {}).get("contributions_total_multiplier", 1.0)
 mult_ben   = cfg.get("macro_units", {}).get("benefits_total_multiplier", 1.0)
 
-# Containers for mean & diff values
-means_contrib, diffs_contrib = [], []
-means_ret, diffs_ret = [], []
-means_contr_amt, diffs_contr_amt = [], []
-means_ben_amt, diffs_ben_amt = [], []
+# ==============================
+# Containers
+# ==============================
+xs_contrib, ys_contrib = [], []
+xs_ret, ys_ret = [], []
+xs_contr_amt, ys_contr_amt = [], []
+xs_ben_amt, ys_ben_amt = [], []
 
-# ---- Collect yearly data ----
+# ==============================
+# Load each year's microdata
+# ==============================
 for y in years:
     fp = out_dir / f"micro_{y}.csv"
     if not fp.exists():
@@ -34,74 +50,73 @@ for y in years:
     m["contribution"] = pd.to_numeric(m["contribution"], errors="coerce").fillna(0)
     m["pension"]      = pd.to_numeric(m["pension"], errors="coerce").fillna(0)
 
-    # --- Micro weighted totals ---
     micro_contributors = ((m["sch_grp"] == "C") * m["weight"]).sum()
     micro_retirees     = ((m["sch_grp"] == "R") * m["weight"]).sum()
     micro_contr_amt    = (m["contribution"] * m["weight"]).sum()
     micro_ben_amt      = (m["pension"] * m["weight"]).sum()
 
-    # --- Macro totals ---
     macro_contributors = float(macro.loc[y, cfg["columns"]["macro"]["contributors"]])
     macro_retirees     = float(macro.loc[y, cfg["columns"]["macro"]["retirees"]])
     macro_contr_amt    = float(macro.loc[y, cfg["columns"]["macro"]["contributions_total"]]) * mult_contr
     macro_ben_amt      = float(macro.loc[y, cfg["columns"]["macro"]["benefits_total"]]) * mult_ben
 
-    # --- Calculate means and diffs ---
-    def add_stats(micro, macro, mean_list, diff_list, scale=1.0):
-        mean_list.append(0.5 * (micro + macro) / scale)
-        diff_list.append((micro - macro) / scale)
+    xs_contrib.append(macro_contributors)
+    ys_contrib.append(micro_contributors)
+    xs_ret.append(macro_retirees)
+    ys_ret.append(micro_retirees)
+    xs_contr_amt.append(macro_contr_amt / 1e9)
+    ys_contr_amt.append(micro_contr_amt / 1e9)
+    xs_ben_amt.append(macro_ben_amt / 1e9)
+    ys_ben_amt.append(micro_ben_amt / 1e9)
 
-    add_stats(micro_contributors, macro_contributors, means_contrib, diffs_contrib)
-    add_stats(micro_retirees, macro_retirees, means_ret, diffs_ret)
-    add_stats(micro_contr_amt, macro_contr_amt, means_contr_amt, diffs_contr_amt, scale=1e9)
-    add_stats(micro_ben_amt, macro_ben_amt, means_ben_amt, diffs_ben_amt, scale=1e9)
+# ==============================
+# Bland–Altman helper
+# ==============================
+def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None):
+    """Draw Bland–Altman plot (mean vs. difference)."""
+    fig, ax = plt.subplots(figsize=(5, 9))
+    if len(x) == 0 or len(y) == 0:
+        ax.text(0.5, 0.5, "No data", ha="center", va="center")
+    else:
+        mean = np.mean([x, y], axis=0)
+        diff = np.array(y) - np.array(x)
+        md = np.mean(diff)
+        sd = np.std(diff)
 
-# ---- Plotting function ----
-def plot_bland_altman(ax, means, diffs, xlabel, ylabel, color):
-    if len(means) == 0:
-        ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=10)
-        return
+        ax.scatter(mean, diff, color=color, s=35, alpha=0.9, edgecolor='none')
+        ax.axhline(md, color='grey', linestyle='--', lw=1)
+        ax.axhline(md + 1.96*sd, color='grey', linestyle=':', lw=1)
+        ax.axhline(md - 1.96*sd, color='grey', linestyle=':', lw=1)
 
-    means = np.array(means)
-    diffs = np.array(diffs)
-    md = np.mean(diffs)
-    sd = np.std(diffs, ddof=1)
-    upper = md + 2.58 * sd
-    lower = md - 2.58 * sd
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.tick_params(direction='in', top=True, right=True)
+        ax.set_box_aspect(1)
 
-    ax.scatter(means, diffs, color=color, alpha=0.6)
-    ax.axhline(upper, color='grey', linestyle='--')
-    ax.axhline(lower, color='grey', linestyle='--')
-    ax.axhline(0, color='black', linestyle=':', alpha=0.5)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.grid(True, linestyle=':', linewidth=0.7)
+        # Label the mean and limits
+       # ax.text(0.02, 0.95, f"Mean diff = {md:.2f}", transform=ax.transAxes, fontsize=9)
+       # ax.text(0.02, 0.88, f"±2.58 SD = {2.58*sd:.2f}", transform=ax.transAxes, fontsize=9)
 
-    #ax.text(0.05, 0.93,
-    #        f"Bias={md:.2f}\n±2.58SD=({lower:.2f}, {upper:.2f})",
-    #        transform=ax.transAxes, fontsize=9,
-    #        bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"))
-    #ax.legend(loc="lower right", fontsize=8)
+    fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
+    plt.close(fig)
 
-# ---- Draw 2×2 panel ----
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+# ==============================
+# Generate and save
+# ==============================
+bland_altman_plot(xs_contrib, ys_contrib,
+                  "Mean contributors (×2 sources)", "Difference (Micro − Macro)",
+                  "tab:blue", "bland-altman-contr")
 
-plot_bland_altman(axes[0, 0], means_contrib, diffs_contrib,
-                  "Mean of (micro, macro) contributors",
-                  "Difference (micro - macro) contributors", "tab:blue")
+bland_altman_plot(xs_ret, ys_ret,
+                  "Mean retirees (×2 sources)", "Difference (Micro − Macro)",
+                  "tab:orange", "bland-altman-retir")
 
-plot_bland_altman(axes[0, 1], means_ret, diffs_ret,
-                  "Mean of (micro, macro) retirees",
-                  "Difference (micro - macro) retirees", "tab:orange")
+bland_altman_plot(xs_contr_amt, ys_contr_amt,
+                  "Mean contributions (bn GHS)", "Difference (Micro − Macro)",
+                  "tab:green", "bland-altman-contr-amt")
 
-plot_bland_altman(axes[1, 0], means_contr_amt, diffs_contr_amt,
-                  "Mean of (micro, macro) contributions (bn GHS)",
-                  "Difference (micro - macro) (bn GHS)", "tab:green")
+bland_altman_plot(xs_ben_amt, ys_ben_amt,
+                  "Mean benefits (bn GHS)", "Difference (Micro − Macro)",
+                  "tab:red", "bland-altman-ben-amt")
 
-plot_bland_altman(axes[1, 1], means_ben_amt, diffs_ben_amt,
-                  "Mean of (micro, macro) benefits (bn GHS)",
-                  "Difference (micro - macro) (bn GHS)", "tab:red")
-
-plt.suptitle("Bland–Altman Plots — Micro vs Macro Comparisons", fontsize=14)
-plt.tight_layout(rect=[0, 0, 1, 0.97])
-plt.show()
+print("All Bland–Altman plots saved to ./figures as PDF.")
