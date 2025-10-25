@@ -6,12 +6,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from utils import load_config, resolve_path, load_sample_for_year, load_demog_for_year
 
-# optional: scienceplots if you want same style as targetline scripts
+
 try:
     import scienceplots
     plt.style.use(['science', 'scatter'])
 except Exception:
-    # fallback to default style if scienceplots not available
+    
     pass
 
 # output folder

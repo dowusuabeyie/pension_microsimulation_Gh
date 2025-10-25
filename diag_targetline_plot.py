@@ -7,13 +7,11 @@ from pathlib import Path
 from utils import load_config, resolve_path, load_macro
 import scienceplots
 
-# Apply SciencePlots style
 plt.style.use(['science', 'scatter'])
 
 # ==============================
 # Directory setup
 # ==============================
-# Create 'figures' folder if it does not exist
 if not os.path.exists("./figures"):
     os.makedirs("figures")
 
