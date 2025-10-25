@@ -6,13 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from utils import load_config, resolve_path, load_sample_for_year, load_demog_for_year
 
+import scienceplots
 
-try:
-    import scienceplots
-    plt.style.use(['science', 'scatter'])
-except Exception:
-    
-    pass
+plt.style.use(['science', 'scatter'])
 
 # output folder
 FIG_DIR = Path("./figures")
