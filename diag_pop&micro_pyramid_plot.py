@@ -131,4 +131,4 @@ def make_pyramid_for_year(year):
 for y in years:
     make_pyramid_for_year(y)
 
-print("✅ All pyramids saved to ./figures.")
+print("All pyramids saved to ./figures.")
