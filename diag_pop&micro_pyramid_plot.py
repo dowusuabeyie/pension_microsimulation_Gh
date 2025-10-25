@@ -42,7 +42,7 @@ def make_pyramid_for_year(year):
 
     # Ensure categories / ordering
     if age_order is None:
-        # fallback: derive age order from sample (or demog)
+        # fallback: derive age order from sample (/ demog)
         if cS["age_group"] in sample.columns:
             age_order_local = sorted(sample[cS["age_group"]].astype(str).unique())
         else:
@@ -51,7 +51,7 @@ def make_pyramid_for_year(year):
     else:
         age_order_local = age_order
 
-    # Aggregate micro: weighted counts by age_grp × sex
+    # Aggregate micro: weighted counts by age_grp and sex
     micro_agg = (
         micro
         .groupby([cS["age_group"] if cS["age_group"] in micro.columns else cD["age_group"], "sex"], dropna=False)["weight"]
@@ -60,8 +60,8 @@ def make_pyramid_for_year(year):
         .reindex(index=age_order_local)
     )
 
-    # Aggregate macro (sample): use N_g_h as population totals
-    # sample uses columns cS["age_group"], cS["sex"], cS["group_total"]
+    # Aggregate macro from sample
+    # we need columns cS["age_group"], cS["sex"], cS["group_total"]
     sample_pop = (
         sample
         .groupby([cS["age_group"], cS["sex"]], dropna=False)[cS["group_total"]]
@@ -70,7 +70,7 @@ def make_pyramid_for_year(year):
         .reindex(index=age_order_local)
     )
 
-    # If some sex columns missing, ensure both M/F exist
+    # checking non-missingness of M/F columns
     for df in (micro_agg, sample_pop):
         for s in sex_order:
             if s not in df.columns:
@@ -90,7 +90,7 @@ def make_pyramid_for_year(year):
     y = np.arange(len(age_order_local))
 
     # Plotting
-    fig, axes = plt.subplots(1, 2, figsize=(10, 8), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(5, 3), sharey=True)
 
     # left: micro
     axes[0].barh(y, -micro_pct.get(sex_order[0], pd.Series(0, index=age_order_local)), align='center')
