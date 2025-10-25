@@ -114,7 +114,7 @@ def make_pyramid_for_year(year):
     axes[0].set_xlabel(f"% population (Micro)")
     axes[1].set_xlabel(f"% population (Sample N_g_h)")
 
-    plt.suptitle(f"Population pyramid comparison — {year}", fontsize=13)
+    #plt.suptitle(f"Population pyramid comparison — {year}", fontsize=13)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
 
     outp = FIG_DIR / f"pyramid_{year}.pdf"
