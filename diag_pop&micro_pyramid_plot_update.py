@@ -72,7 +72,7 @@ def make_pyramid_for_year(year):
     fig, axes = plt.subplots(1, 2, figsize=(5, 3), sharey=True)
 
     # --- colors
-    color_m, color_f = "darkblue", "lime"
+    color_m, color_f = "#644f88", "#bbaed1"
 
     # left panel: Micro
     axes[0].barh(y, -micro_pct.get(sex_order[0], 0), color=color_m, alpha=0.8, label="Male")
