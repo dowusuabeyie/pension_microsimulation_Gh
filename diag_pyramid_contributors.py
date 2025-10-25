@@ -19,6 +19,20 @@ cS = cfg["columns"]["sample"]
 sex_order = cfg.get("sex_values", ["M", "F"])
 AGE_LABEL_FONTSIZE = 7
 
+def parse_age_min_max(age_str):
+    """Parse age group like '15–19' or '95+' into numeric (min, max)."""
+    if pd.isna(age_str):
+        return (None, None)
+    s = str(age_str).replace("–", "-")
+    if "+" in s:
+        val = int(s.replace("+", "").strip())
+        return (val, 120)
+    try:
+        parts = s.split("-")
+        return (int(parts[0]), int(parts[1]))
+    except Exception:
+        return (None, None)
+
 def make_contributor_pyramid(year):
     micro_fp = out_dir / f"micro_{year}.csv"
     if not micro_fp.exists():
@@ -29,19 +43,22 @@ def make_contributor_pyramid(year):
     sample = load_sample_for_year(cfg, year)
     micro["weight"] = pd.to_numeric(micro["weight"], errors="coerce").fillna(0)
 
+    # parse age groups for sample (macro)
+    age_bounds = sample[cS["age_group"]].apply(parse_age_min_max)
+    sample["age_min"] = age_bounds.apply(lambda x: x[0])
+    sample["age_max"] = age_bounds.apply(lambda x: x[1])
+
     # --- filter: contributors (<60)
     if "age_min" in micro.columns:
         micro = micro[micro["age_min"] < 60]
-    if "age_min" in sample.columns:
-        sample = sample[sample["age_min"] < 60]
     else:
-        # fallback if not numeric, check string prefix
-        sample = sample[sample[cS["age_group"]].apply(lambda x: not str(x).startswith("60"))]
+        pass  # already correct via age_grp filtering from simulation
+    sample = sample[sample["age_max"] < 60]
 
     # determine age order
     age_order_local = sorted(sample[cS["age_group"]].astype(str).unique())
 
-    # --- aggregate by age/sex
+    # --- aggregate
     micro_agg = micro.groupby(["age_grp", "sex"])["weight"].sum().unstack(fill_value=0).reindex(index=age_order_local)
     sample_agg = sample.groupby([cS["age_group"], cS["sex"]])[cS["group_total"]].sum().unstack(fill_value=0).reindex(index=age_order_local)
 
@@ -57,20 +74,17 @@ def make_contributor_pyramid(year):
     fig, axes = plt.subplots(1, 2, figsize=(6, 3), sharey=True)
     color_m, color_f = "#4582b4", "#ee798a"
 
-    # left: Micro
     axes[0].barh(y, -micro_pct["M"], color=color_m, alpha=0.85)
     axes[0].barh(y,  micro_pct["F"], color=color_f, alpha=0.85)
-    # right: Macro
     axes[1].barh(y, -sample_pct["M"], color=color_m, alpha=0.85)
     axes[1].barh(y,  sample_pct["F"], color=color_f, alpha=0.85)
 
-    # add labels
     def add_labels(ax, m, f):
         for i, (lv, rv) in enumerate(zip(m, f)):
             if lv > 0:
-                ax.text(-lv - 0.15, i, f"{lv:.2f}%", va="center", ha="right", fontsize=6)
+                ax.text(-lv - 0.15, i, f"{lv:.1f}%", va="center", ha="right", fontsize=6)
             if rv > 0:
-                ax.text(rv + 0.15, i, f"{rv:.2f}%", va="center", ha="left", fontsize=6)
+                ax.text(rv + 0.15, i, f"{rv:.1f}%", va="center", ha="left", fontsize=6)
 
     add_labels(axes[0], micro_pct["M"], micro_pct["F"])
     add_labels(axes[1], sample_pct["M"], sample_pct["F"])
@@ -86,17 +100,15 @@ def make_contributor_pyramid(year):
         ticks = ax.get_xticks()
         ax.set_xticklabels([f"{abs(t):.0f}%" for t in ticks])
 
-    # duplicate age labels on right
     axes[1].yaxis.tick_right()
     axes[1].set_yticklabels(age_order_local, fontsize=AGE_LABEL_FONTSIZE)
     axes[1].yaxis.set_label_position("right")
 
-    # sex labels
     for ax in axes:
-        ax.text(-ax.get_xlim()[1]*0.8, -1, "Male", color=color_m, fontsize=8, ha="center")
-        ax.text(ax.get_xlim()[1]*0.8, -1, "Female", color=color_f, fontsize=8, ha="center")
+        ax.text(-ax.get_xlim()[1]*0.8, ax.get_ylim()[1]*0.95, "Male", color=color_m, fontsize=8, ha="center", va="top")
+        ax.text( ax.get_xlim()[1]*0.8, ax.get_ylim()[1]*0.95, "Female", color=color_f, fontsize=8, ha="center", va="top")
 
-    # titles under plots
+
     for ax, label in zip(axes, ["Micro-structure", "Macro-structure"]):
         ax.text(0.5, -0.08, label, transform=ax.transAxes, fontsize=9, ha="center", va="top")
 
