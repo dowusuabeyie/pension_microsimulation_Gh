@@ -51,8 +51,6 @@ def make_contributor_pyramid(year):
     # --- filter: contributors (<60)
     if "age_min" in micro.columns:
         micro = micro[micro["age_min"] < 60]
-    else:
-        pass  # already correct via age_grp filtering from simulation
     sample = sample[sample["age_max"] < 60]
 
     # determine age order
@@ -72,45 +70,53 @@ def make_contributor_pyramid(year):
 
     y = np.arange(len(age_order_local))
     fig, axes = plt.subplots(1, 2, figsize=(6, 3), sharey=True)
-    color_m, color_f = "#4582b4", "#ee798a"
+    color_m, color_f = "#51749b", "#9bb0c6" ##51749b
 
+    # --- plot bars
     axes[0].barh(y, -micro_pct["M"], color=color_m, alpha=0.85)
     axes[0].barh(y,  micro_pct["F"], color=color_f, alpha=0.85)
     axes[1].barh(y, -sample_pct["M"], color=color_m, alpha=0.85)
     axes[1].barh(y,  sample_pct["F"], color=color_f, alpha=0.85)
 
-    def add_labels(ax, m, f):
-        for i, (lv, rv) in enumerate(zip(m, f)):
+    # --- Add labels INSIDE bars
+    def add_inside_labels(ax, left_vals, right_vals):
+        for i, (lv, rv) in enumerate(zip(left_vals, right_vals)):
             if lv > 0:
-                ax.text(-lv - 0.15, i, f"{lv:.1f}%", va="center", ha="right", fontsize=6)
+                ax.text(-lv / 2, i, f"{lv:.1f}%", va="center", ha="center",
+                        fontsize=6, color="white", fontweight="bold")
             if rv > 0:
-                ax.text(rv + 0.15, i, f"{rv:.1f}%", va="center", ha="left", fontsize=6)
+                ax.text(rv / 2, i, f"{rv:.1f}%", va="center", ha="center",
+                        fontsize=6, color="white", fontweight="bold")
 
-    add_labels(axes[0], micro_pct["M"], micro_pct["F"])
-    add_labels(axes[1], sample_pct["M"], sample_pct["F"])
+    add_inside_labels(axes[0], micro_pct["M"], micro_pct["F"])
+    add_inside_labels(axes[1], sample_pct["M"], sample_pct["F"])
 
+    # --- axes setup
     for ax in axes:
         ax.set_yticks(y)
         ax.set_yticklabels(age_order_local, fontsize=AGE_LABEL_FONTSIZE)
         ax.invert_yaxis()
-        ax.tick_params(length=0)
+        ax.tick_params(direction="in", length=5, width=0.8, top=True, right=True)        
         ax.set_xlim(-max(micro_pct.max().max(), sample_pct.max().max()) * 1.2,
                      max(micro_pct.max().max(), sample_pct.max().max()) * 1.2)
         ax.set_xlabel("% of population")
         ticks = ax.get_xticks()
-        ax.set_xticklabels([f"{abs(t):.0f}%" for t in ticks])
+        ax.set_xticklabels([f"{abs(t):.0f}$\\%$" for t in ticks])
 
+    # duplicate y-axis labels on right
     axes[1].yaxis.tick_right()
     axes[1].set_yticklabels(age_order_local, fontsize=AGE_LABEL_FONTSIZE)
     axes[1].yaxis.set_label_position("right")
 
+    # --- Sex labels
     for ax in axes:
         ax.text(-ax.get_xlim()[1]*0.8, ax.get_ylim()[1]*0.95, "Male", color=color_m, fontsize=8, ha="center", va="top")
         ax.text( ax.get_xlim()[1]*0.8, ax.get_ylim()[1]*0.95, "Female", color=color_f, fontsize=8, ha="center", va="top")
 
-
+    # --- Chart subtitles
     for ax, label in zip(axes, ["Micro-structure", "Macro-structure"]):
-        ax.text(0.5, -0.08, label, transform=ax.transAxes, fontsize=9, ha="center", va="top")
+        ax.text(0.5, -0.08, label, transform=ax.transAxes,
+                fontsize=9, ha="center", va="top", color="black")
 
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     outp = FIG_DIR / f"pyramid_contr_{year}.pdf"
