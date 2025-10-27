@@ -82,10 +82,10 @@ def make_contributor_pyramid(year):
     def add_inside_labels(ax, left_vals, right_vals):
         for i, (lv, rv) in enumerate(zip(left_vals, right_vals)):
             if lv > 0:
-                ax.text(-lv / 2, i, f"{lv:.1f}%", va="center", ha="center",
+                ax.text(-lv / 2, i, f"{lv:.2f}%", va="center", ha="center",
                         fontsize=6, color="white", fontweight="bold")
             if rv > 0:
-                ax.text(rv / 2, i, f"{rv:.1f}%", va="center", ha="center",
+                ax.text(rv / 2, i, f"{rv:.2f}%", va="center", ha="center",
                         fontsize=6, color="white", fontweight="bold")
 
     add_inside_labels(axes[0], micro_pct["M"], micro_pct["F"])
