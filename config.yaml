@@ -8,7 +8,7 @@ years:
   mode: "range"        # "range" or "list"
   start: 2015
   end: 2024
-  list: []             # e.g., [2015,2016,2021] if you switch to "list"
+  list: []             # e.g., [2015,2016,2021] if switch to "list"
 
 files:
   macro: "input/macro.csv"
@@ -23,7 +23,7 @@ columns:
     retirees: "retir"
     new_retirees: "retir_0"
     new_registrants: "regr_0"
-    contributions_total: "contr_amt"   # NOTE: billions (see macro_units)
+    contributions_total: "contr_amt"   # NOTE: billions 
     benefits_total: "ben_amt"          # NOTE: billions
     pension_avg: "p_avg"
     insurable_earnings_avg: "ie_avg"
@@ -35,13 +35,13 @@ columns:
   demog:
     year: "cal_yr"
     age_group: "age_grp"
-    sex: "sex"                         # M first, then F
+    sex: "sex"                         
     population: "pop"
     employed: "emp"
     employment_rate_pct: "emp_rate"
     mortality_rate: "qx"
 
-  sample:                                # one combined file per year
+  sample:                                
     year: "cal_yr"
     age_group: "age_grp"
     sex: "sex"
