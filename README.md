@@ -1,19 +1,14 @@
-# Calibrated Synthetic Microdata for Ghana’s Pension Scheme (Tier 1), 2015–2024
+# Calibrated Simulation of Individual Level Data for the Basic National Pension Scheme (Tier 1) in Ghana for the Periods 2015 to 2024
 
-This repository contains the synthetic microdata constructed for the study:
+This repository contains the simulated microdata constructed for the study:
 
 > **Owusu Abeyie et al. (2025).**  
-> *Calibrated Microdata Simulation for Ghana’s Basic National Pension Scheme (Tier 1): 2015–2024.*  
+> *Calibrated Simulation of Individual Level Data for the Basic National Pension Scheme (Tier 1) in Ghana (2015-2024).*  
 > Manuscript under review.
 
-The dataset is generated using a transparent and reproducible microsimulation framework that aligns individual-level synthetic records with official macro aggregates from SSNIT, NPRA, and demographic estimates from the Ghana Statistical Service and UN World Population Prospects.
+The dataset is generated using a transparent and reproducible microsimulation method that aligns individual-level records with official macro aggregates for Tier 1 with data sources from SSNIT, NPRA and demographic estimates from the Ghana Statistical Service and UN World Population Prospects.
 
 The accompanying **replication code** has been made publicly available at:  
-**GitHub:** https://github.com/**<your-username>/<your-repo>**
+**GitHub:** https://github.com/dowusuabeyie/pension_microsimulation_Gh
 
----
-
-## 📦 Contents of This Dataset
-
-This Mendeley Data package contains:
 
