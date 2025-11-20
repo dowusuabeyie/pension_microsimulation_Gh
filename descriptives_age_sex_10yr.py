@@ -1,4 +1,3 @@
-# === descriptives_age_sex_wide_pooled_10yr.py ===
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -133,7 +132,7 @@ micro_pooled = pd.concat(micro_all, ignore_index=True)
 df_stats = compute_stats(micro_pooled)
 
 # ======================
-# Reshape for presentation
+# Reshape
 # ======================
 def reshape_pooled(df):
     rows = []
@@ -157,10 +156,10 @@ def reshape_pooled(df):
 df_wide_pooled = reshape_pooled(df_stats)
 
 # ======================
-# Save Excel output
+# Save Excel results
 # ======================
 out_pooled = desc_dir / "micro_age_sex_table_pooled_10yr_2015_2024.xlsx"
 with pd.ExcelWriter(out_pooled, engine="openpyxl") as writer:
     df_wide_pooled.to_excel(writer, index=False, sheet_name="Pooled_10yr")
 
-print(f"\n Pooled descriptive table (10-year groups) saved → {out_pooled}")
+print(f"\n Pooled descriptive table (10-year groups) saved {out_pooled}")
