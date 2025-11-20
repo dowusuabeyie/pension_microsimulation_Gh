@@ -1,4 +1,3 @@
-# === bland_altman_science_split.py ===
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -90,7 +89,7 @@ def bland_altman_plot(x, y, xlabel, ylabel, color, fname, xlim=None, ylim=None, 
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-        # === Scientific notation option (for retirees) ===
+        
         if scientific:
             ax.ticklabel_format(style='sci', axis='x', scilimits=(5, 5))
 

@@ -1,5 +1,5 @@
 project:
-  # Absolute root directory on your machine (Windows):
+  # Root directory on machine (Windows):
   root_dir: "C:\\Users\\dowus\\Dropbox\\Publications\\Statistics of Tier 1\\microsimulation"
   input_dir: "input"
   output_dir: "output"
@@ -8,7 +8,7 @@ years:
   mode: "range"        # "range" or "list"
   start: 2015
   end: 2024
-  list: []             # e.g., [2015,2016,2021] if switch to "list"
+  list: []             # [2015,2016,2021] if switch to "list"
 
 files:
   macro: "input/macro.csv"
@@ -23,8 +23,8 @@ columns:
     retirees: "retir"
     new_retirees: "retir_0"
     new_registrants: "regr_0"
-    contributions_total: "contr_amt"   # NOTE: billions 
-    benefits_total: "ben_amt"          # NOTE: billions
+    contributions_total: "contr_amt"   # NOTE: in billions 
+    benefits_total: "ben_amt"          # NOTE: in billions
     pension_avg: "p_avg"
     insurable_earnings_avg: "ie_avg"
     coverage_pct: "cov"
@@ -45,11 +45,11 @@ columns:
     year: "cal_yr"
     age_group: "age_grp"
     sex: "sex"
-    scheme_group: "sch_grp"             # VALUES: C (contributors), R (retirees) only
-    group_total: "N_g_h"                # target for that sch_grp×age×sex stratum
-    group_sample: "n_g_h"               # sample size for that sch_grp×age×sex stratum
+    scheme_group: "sch_grp"             
+    group_total: "N_g_h"                
+    group_sample: "n_g_h"               
 
-# Units for macro amounts (you said these are in BILLIONS in macro.csv)
+# Units for macro amounts in billions:
 macro_units:
   contributions_total_multiplier: 1000000000   # 1e9
   benefits_total_multiplier: 1000000000        # 1e9
@@ -58,7 +58,7 @@ age_groups:
   order: ["15–19","20–24","25–29","30–34","35–39","40–44","45–49","50–54","55–59",
           "60–64","65–69","70–74","75–79","80–84","85–89","90–94","95+"]
 
-sex_values: ["M","F"]   # keep M blocks first, then F blocks, to mirror your CSVs
+sex_values: ["M","F"]  
 
 design:
   design_effect_target: 1.60
@@ -68,19 +68,16 @@ design:
   lognormal_sigma_retirees: 0.55
   rng_seed: 2021
 
-# Transitions allocation rules (when we build flows later)
+# Transitions rules
 transitions:
   use_macro_new_registrants: true
   use_macro_new_retirees: true
   tie_contributors_to_employment: true
   mortality_scaling: 1.0
 
-# Non-member sampling rule (your preference):
-# "When it gets to non-members, pick the SAME number as contributors."
-# We won’t store N (control totals) for non-members in the sample CSV.
 nonmembers_sampling:
-  mirror_contributors_sample: true   # => n_N_h = n_C_h per age×sex
-  sample_multiplier: 1.0             # leave 1.0; change to 0.5 etc. if ever needed
+  mirror_contributors_sample: true   
+  sample_multiplier: 1.0             
 
 finance:
   kappa_contribution_rate: 0.11

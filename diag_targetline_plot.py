@@ -6,7 +6,7 @@ from pathlib import Path
 from utils import load_config, resolve_path, load_macro
 import scienceplots
 
-# Apply SciencePlots style
+# SciencePlots theme
 plt.style.use(['science', 'scatter'])
 
 # ==============================
@@ -74,7 +74,7 @@ for y in years:
 # Define plotting helper
 # ==============================
 def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None, ylim=None):
-    """Draws and saves a SciencePlots-styled scatter plot."""
+    """Plot and saves a SciencePlots-styled scatter diagrams."""
     fig, ax = plt.subplots(figsize=(3, 3))
 
     if len(x) == 0 or len(y) == 0:
@@ -88,17 +88,14 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
 
-        # Custom limits if provided
         if xlim is not None:
             ax.set_xlim(xlim)
         if ylim is not None:
             ax.set_ylim(ylim)
 
-        # Scientific notation option (for retirees)
         if scientific:
             ax.ticklabel_format(style='sci', axis='both', scilimits=(5, 5))
 
-        # Inward ticks on all sides
         ax.tick_params(direction='in', length=5, width=0.8, top=True, right=True)
         ax.set_box_aspect(1)
 
@@ -109,7 +106,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             mape = np.mean(np.abs((np.array(y) - np.array(x)) / np.array(x))) * 100
 
             def sci_not(val):
-                """Format number in scientific notation."""
+                """scientific notation."""
                 if val == 0:
                     return "0"
                 exp = int(np.floor(np.log10(abs(val))))
@@ -132,7 +129,6 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             )
 
 
-    # Save high-quality PDF
     fig.savefig(f"figures/{fname}.pdf", dpi=300, bbox_inches="tight")
     plt.close(fig)
 

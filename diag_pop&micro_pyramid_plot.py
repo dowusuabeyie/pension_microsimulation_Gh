@@ -1,4 +1,3 @@
-# === diag_pop&micro_pyramid_plot_updated.py ===
 import os
 from pathlib import Path
 import numpy as np
@@ -82,7 +81,7 @@ def make_pyramid_for_year(year):
     axes[1].barh(y, -sample_pct.get(sex_order[0], 0), color=color_m, alpha=0.8)
     axes[1].barh(y,  sample_pct.get(sex_order[1], 0), color=color_f, alpha=0.8)
 
-    # --- Add percentage labels
+    # --- Percentage labels
     def add_labels(ax, data_left, data_right):
         for i, (lv, rv) in enumerate(zip(data_left, data_right)):
             if lv != 0:
@@ -107,7 +106,7 @@ def make_pyramid_for_year(year):
     axes[1].yaxis.tick_right()
     axes[1].yaxis.set_label_position("right")
 
-    # --- Place sex labels on chart
+    # --- Placing sex labels on chart
     axes[0].text(-axes[0].get_xlim()[1] * 0.8, -1, "Male", color=color_m, fontsize=8, ha="center")
     axes[0].text( axes[0].get_xlim()[1] * 0.8, -1, "Female", color=color_f, fontsize=8, ha="center")
 
@@ -127,7 +126,7 @@ def make_pyramid_for_year(year):
     plt.close(fig)
     print(f"[{year}] saved → {outp}")
 
-# Run for all years
+# Running for all years
 for y in years:
     make_pyramid_for_year(y)
 

@@ -103,7 +103,6 @@ def make_contributor_pyramid(year):
         ticks = ax.get_xticks()
         ax.set_xticklabels([f"{abs(t):.0f}$\\%$" for t in ticks])
 
-    # duplicate y-axis labels on right
     axes[1].yaxis.tick_right()
     axes[1].set_yticklabels(age_order_local, fontsize=AGE_LABEL_FONTSIZE)
     axes[1].yaxis.set_label_position("right")

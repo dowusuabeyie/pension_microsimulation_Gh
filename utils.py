@@ -1,6 +1,3 @@
-# utils.py
-# Helpers for config, robust CSV loading, validation, alignment, and diagnostics.
-
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List

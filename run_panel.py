@@ -9,7 +9,7 @@ from utils import (
     align_demog_and_sample, quick_totals, scale_macro_currency
 )
 
-# ---------- helpers ----------
+# ----- helpers --
 def parse_age_bounds(lbl: str) -> tuple[int, int]:
     """
     Extract (age_min, age_max) from labels like '15–19', '60-64', '95+'.
@@ -17,7 +17,6 @@ def parse_age_bounds(lbl: str) -> tuple[int, int]:
     """
     if not isinstance(lbl, str):
         return -1, -1
-    # normalize en-dash/emdash to hyphen
     s = lbl.replace("–", "-").replace("—", "-").strip()
     if re.match(r"^\d+\+$", s):
         lo = int(re.findall(r"\d+", s)[0])
@@ -67,7 +66,7 @@ def expand_strata_to_micro(strata: pd.DataFrame, cfg: dict) -> pd.DataFrame:
             age_min, age_max = parse_age_bounds(str(r[cD["age_group"]]))
 
             for _ in range(n):
-                id_formatted = f"{uid:05d}{yr_suffix}"  # e.g., 0000115, 0101016
+                id_formatted = f"{uid:05d}{yr_suffix}" 
                 rows.append({
                     "id_synt": id_formatted,
                     "cal_yr": year,
@@ -107,7 +106,7 @@ def proportional_pool(mask: np.ndarray, weights: np.ndarray, target: float, rng:
     return bernoulli_with_target(weights, probs, target, rng)
 
 
-# ---------- main pipeline ----------
+# --- main pipeline -------
 def main():
     cfg = load_config("config.yaml")
     mode = cfg["years"]["mode"]
@@ -237,7 +236,7 @@ def main():
         micro["death_ind"] = death_ind.astype(int)
         micro["sch_status"] = micro["sch_grp"]
 
-        # reorder & write final
+        # reorder \& write final
         final_cols = [
             "id_synt", "cal_yr", "age_min", "age_max", "age_grp", "sex", "sch_grp", "weight",
             "ie", "sch_status", "contribution", "pension", "q_as", "p_as",
