@@ -1,4 +1,3 @@
-# === micro_vs_macro_science_split.py ===
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,11 +6,13 @@ from pathlib import Path
 from utils import load_config, resolve_path, load_macro
 import scienceplots
 
+# Apply SciencePlots style
 plt.style.use(['science', 'scatter'])
 
 # ==============================
 # Directory setup
 # ==============================
+# Create 'figures' folder if it does not exist
 if not os.path.exists("./figures"):
     os.makedirs("figures")
 
@@ -64,17 +65,17 @@ for y in years:
     ys_contrib.append(micro_contributors)
     xs_ret.append(macro_retirees)
     ys_ret.append(micro_retirees)
-    xs_contr_amt.append(macro_contr_amt / 1e9)
-    ys_contr_amt.append(micro_contr_amt / 1e9)
-    xs_ben_amt.append(macro_ben_amt / 1e9)
-    ys_ben_amt.append(micro_ben_amt / 1e9)
+    xs_contr_amt.append(macro_contr_amt)
+    ys_contr_amt.append(micro_contr_amt)
+    xs_ben_amt.append(macro_ben_amt)
+    ys_ben_amt.append(micro_ben_amt)
 
 # ==============================
 # Define plotting helper
 # ==============================
 def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None, ylim=None):
     """Draws and saves a SciencePlots-styled scatter plot."""
-    fig, ax = plt.subplots(figsize=(5, 5))
+    fig, ax = plt.subplots(figsize=(3, 3))
 
     if len(x) == 0 or len(y) == 0:
         ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=10)
@@ -108,7 +109,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             mape = np.mean(np.abs((np.array(y) - np.array(x)) / np.array(x))) * 100
 
             def sci_not(val):
-                """Format number in scientific notation like ×10^{power}."""
+                """Format number in scientific notation."""
                 if val == 0:
                     return "0"
                 exp = int(np.floor(np.log10(abs(val))))
@@ -122,7 +123,7 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
             )
 
             ax.text(
-                0.05, 0.87,
+                0.05, 0.8,
                 text_eq,
                 transform=ax.transAxes,
                 fontsize=9,
@@ -139,24 +140,25 @@ def plot_scatter(x, y, xlabel, ylabel, color, fname, scientific=False, xlim=None
 # Generate & save four plots
 # ==============================
 plot_scatter(xs_contrib, ys_contrib,
-             "Number of contributors (macrodata)", "Number of contributors (microdata)",
+             "Contributors (macrodata)", "Contributors (microdata)",
              "tab:blue", "targetline-contr",
              xlim=(1200000, 2100000), ylim=(1200000, 2100000))
 
 plot_scatter(xs_ret, ys_ret,
-             "Number of retirees (macrodata)", "Number of retirees (microdata)",
+             "Retirees (macrodata)", "Retirees (microdata)",
              "tab:orange", "targetline-retir",
              scientific=True,
-             xlim=(140000, 260000), ylim=(140000, 260000))
+             xlim=(150000, 260000), ylim=(150000, 260000))
 
 plot_scatter(xs_contr_amt, ys_contr_amt,
-             "Contribution (bil. GHS, macrodata)", "Contribution (bil. GHS, microdata)",
+             "Contributions (macrodata)", "Contributions (microdata)",
              "tab:green", "targetline-contr-amt",
-             xlim=(1, 9), ylim=(1, 9))
+             xlim=(1000000000, 9000000000), ylim=(1000000000, 9000000000))
 
 plot_scatter(xs_ben_amt, ys_ben_amt,
-             "Benefit (bil. GHS, macrodata)", "Benefit (bil. GHS, microdata)",
+             "Benefits (macrodata)", "Benefits (microdata)",
              "tab:red", "targetline-ben-amt",
-             xlim=(1, 7), ylim=(1, 7))
+             xlim=(1000000000, 7000000000), ylim=(1000000000, 7000000000))
 
-print("All SciencePlots saved to ./figures as PDF.")
+print("All plots saved to ./figures as PDF.")
+

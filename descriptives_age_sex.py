@@ -1,4 +1,3 @@
-# === descriptives_age_sex_wide_all_years_pooled.py ===
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -31,7 +30,7 @@ def weighted_percentile(values, weights, percentiles):
     return np.interp(np.array(percentiles) / 100.0, cum_weights, values)
 
 # ======================
-# Compute stats for one dataset
+# Compute stats for dataset
 # ======================
 def compute_stats(df, year):
     df["weight"] = pd.to_numeric(df["weight"], errors="coerce").fillna(0)
@@ -126,7 +125,7 @@ micro_pooled = pd.concat(micro_pooled, ignore_index=True)
 
 df_pooled_stats = compute_stats(micro_pooled, year="2015–2024")
 
-# Create pooled wide table (no Year column in results)
+# Create pooled wide table (no Year in results)
 def reshape_pooled(df):
     rows = []
     for age in sorted(df["age_grp"].unique()):
@@ -171,8 +170,8 @@ with pd.ExcelWriter(out_2024, engine="openpyxl") as writer:
 with pd.ExcelWriter(out_pooled, engine="openpyxl") as writer:
     df_wide_pooled.to_excel(writer, index=False, sheet_name="Pooled_2015_2024")
 
-print("\n All descriptive tables saved successfully:")
-print(f" → {out_all}")
-print(f" → {out_2023}")
-print(f" → {out_2024}")
-print(f" → {out_pooled}")
+print("\n All descriptive tables saved:")
+print(f" {out_all}")
+print(f" {out_2023}")
+print(f" {out_2024}")
+print(f" {out_pooled}")
