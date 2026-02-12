@@ -1,5 +1,12 @@
 # Calibrated Simulation of Individual Level Data for the Basic National Pension Scheme (Tier 1) in Ghana for the Periods 2015 to 2024
 
+[![Mendeley Data DOI](https://img.shields.io/badge/Mendeley%20Data%20DOI-10.17632%2Fx9v75twt2t.1-blue.svg)](https://doi.org/10.17632/x9v75twt2t.1)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Status](https://img.shields.io/badge/Status-Live-brightgreen.svg)](https://doi.org/10.17632/x9v75twt2t.1)
+[![Status](https://img.shields.io/badge/Status-With_Editor-yellow.svg)](https://doi.org/10.17632/x9v75twt2t.1)
+
+**Data Article V1** | [Mendeley Data](https://data.mendeley.com/research-data/?query=calibrated%20simulation)
+
 This repository contains the simulated microdata constructed for the study:
 
 > **Owusu Abeyie et al. (2025).**  
