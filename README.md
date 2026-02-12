@@ -2,7 +2,7 @@
 
 **Calibrated Simulation of Individual Level Data for the Basic National Pension Scheme (Tier 1) in Ghana for the Periods 2015 to 2024**
 
-[![DOI](https://img.shields.io/badge/Mendeley%20Data%20DOI-10.17632%2Fx9v75twt2t.1-blue.svg)](https://doi.org/10.17632/x9v75twt2t.1)
+[![Mendeley Data DOI](https://img.shields.io/badge/Mendeley%20Data%20DOI-10.17632%2Fx9v75twt2t.1-blue.svg)](https://doi.org/10.17632/x9v75twt2t.1)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Status](https://img.shields.io/badge/Data_Status-Live-brightgreen.svg)](https://doi.org/10.17632/x9v75twt2t.1)
 [![Status](https://img.shields.io/badge/Article_Status-With_Editor-yellow.svg)](https://www.sciencedirect.com/journal/data-in-brief)
